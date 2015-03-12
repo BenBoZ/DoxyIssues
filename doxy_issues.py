@@ -7,9 +7,6 @@ from textwrap import TextWrapper
 USER='RemediOSM'
 REPO='UltraSound'
 
-USER='syncthing'
-REPO='syncthing'
-
 OUTPUT_FILE = "output.txt"
 
 REQ_TEMPLATE = """\n\
