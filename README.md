@@ -3,11 +3,12 @@ Python script to pull issues from Github repo and convert them to Doxygen file
 
 ## Usage
     doxy_issues.py [-h] [-u USER] [-r REPO] [-s {open,closed,all}]
-                          [-o OUTPUT_PATH]
- 
+                      [-o OUTPUT_PATH] [-l LABELS]
+
+
     doxy_issues retrieves all github issues from the given repo and outputs them
     in a format which is suitable for Doxygen.
- 
+
     optional arguments:
       -h, --help            show this help message and exit
       -u USER, --user USER  The user or organization of the repo
@@ -17,3 +18,6 @@ Python script to pull issues from Github repo and convert them to Doxygen file
       -o OUTPUT_PATH, --output_path OUTPUT_PATH
                             The relative or absolute path where the file will be
                             written
+      -l LABELS, --labels LABELS
+                            Download only issues with specified labels, comma-
+                            seperate multiple

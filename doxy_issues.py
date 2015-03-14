@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 
 """
-doxy_issues retrieves all github issues from the given repo and outputs them in
-MarkDown format which is suitable for Doxygen.
+doxy_issues retrieves all Github issues from the given repo and outputs them in
+a format which is suitable for Doxygen.
 """
 
 from githubpy.github import GitHub
@@ -21,7 +21,7 @@ EMPTY_ROW = """\
     | """
 
 
-def get_all_issues(user, repo, state='all'):
+def get_all_issues(user, repo, state='all', labels=''):
     "Gets all issues from the specified users repo"
 
     github = GitHub()
@@ -29,7 +29,9 @@ def get_all_issues(user, repo, state='all'):
     page = 1
     retrieved_issues = []
     while True:
-        result = github.repos(user)(repo).issues.get(state=state, page=str(page))
+        result = github.repos(user)(repo).issues.get(state=state,
+                                                     labels=labels,
+                                                     page=str(page))
         if len(result) > 0:
             print('Retrieved page {}'.format(page))
             retrieved_issues += result
@@ -170,6 +172,9 @@ def parse_arguments():
     parser.add_argument('-o', '--output_path', default='output.dox', type=str,
                         help='The relative or absolute path where the file will be written')
 
+    parser.add_argument('-l', '--labels', default='', type=str,
+                        help='Download only issues with specified labels, comma-seperate multiple')
+
     return parser.parse_args()
 
 def get_issues_and_write_to_file():
@@ -180,7 +185,7 @@ def get_issues_and_write_to_file():
 
     print("Getting {0.state} issues from https://github/com/{0.user}/{0.repo}".format(args))
 
-    issues = get_all_issues(args.user, args.repo, args.state)
+    issues = get_all_issues(args.user, args.repo, args.state, args.labels)
 
     output_file = create_header()
     ref_links = {}
