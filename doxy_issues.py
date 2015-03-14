@@ -12,8 +12,6 @@ MarkDown format which is suitable for Doxygen.
 """
 
 # constants
-OUTPUT_FILE = "output.txt"
-
 REQ_TEMPLATE = """\n\
     | {requirement_txt}:{title_txt} {labels_txt} |
     |-{sep_col}-|\n\
