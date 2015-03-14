@@ -1,15 +1,14 @@
 #! /usr/bin/env python
 
-from githubpy.github import *
-
-from textwrap import TextWrapper
-
-import argparse
-
-__doc__ = """\
-doxy_issues retrieves all github issues from the given repo and outputs them in 
+"""
+doxy_issues retrieves all github issues from the given repo and outputs them in
 MarkDown format which is suitable for Doxygen.
 """
+
+from githubpy.github import GitHub
+
+from textwrap import TextWrapper
+import argparse
 
 # constants
 REQ_TEMPLATE = """\n\
@@ -25,20 +24,20 @@ EMPTY_ROW = """\
 def get_all_issues(user, repo, state='all'):
     "Gets all issues from the specified users repo"
 
-    gh = GitHub()
+    github = GitHub()
 
     page = 1
-    issues = []
+    retrieved_issues = []
     while True:
-        result = gh.repos(user)(repo).issues.get(state=state, page=str(page))
+        result = github.repos(user)(repo).issues.get(state=state, page=str(page))
         if len(result) > 0:
             print('Retrieved page {}'.format(page))
-            issues = issues + result
+            retrieved_issues += result
             page += 1
         else:
             break
 
-    return issues
+    return retrieved_issues
 
 
 def format_issue(issue, ref_links):
@@ -62,9 +61,10 @@ def format_issue(issue, ref_links):
     return formatted_issue, ref_links
 
 def format_body(issue, empty_row, width_col):
+    """ Formats the body of an issue """
 
-    wrapper = TextWrapper(initial_indent = empty_row,
-                          subsequent_indent = empty_row,
+    wrapper = TextWrapper(initial_indent=empty_row,
+                          subsequent_indent=empty_row,
                           width=len(empty_row) + width_col,
                           replace_whitespace=False)
 
@@ -74,35 +74,46 @@ def format_body(issue, empty_row, width_col):
     txt = ""
 
     for line in lines:
-       txt += line.ljust(width_col + len(empty_row) ) + (' |\n')
+        txt += line.ljust(width_col + len(empty_row)) + (' |\n')
 
     return txt
 
 def format_requirement(issue, ref_links):
+    """ Formats an requirement """
 
     req_url_ref = "req_{}_url".format(issue['number'])
     req_name = "requirement {}".format(issue['number'])
 
-    formatted_requirement, ref_links = _create_link(req_name, req_url_ref, issue['html_url'], ref_links)
+    formatted_requirement, ref_links = _create_link(req_name,
+                                                    req_url_ref,
+                                                    issue['html_url'],
+                                                    ref_links)
 
     return formatted_requirement, ref_links
 
 def format_labels(issue, ref_links):
+    """ Formats the labels of an issue """
 
     formatted_labels = ""
 
     for label in issue['labels']:
-        if formatted_labels: formatted_labels += " "
+        if formatted_labels:
+            formatted_labels += " "
 
         label_url_ref = "{}_url".format(label['name'])
         ref_links[label_url_ref] = label['url']
 
-        formatted_lbl, ref_links = _create_link(label['name'], label_url_ref, label['url'], ref_links)
+        formatted_lbl, ref_links = _create_link(label['name'],
+                                                label_url_ref,
+                                                label['url'],
+                                                ref_links)
         formatted_labels += formatted_lbl
 
     return formatted_labels, ref_links
 
 def _create_link(name, ref_name, url, ref_links):
+    """ Creates a link which uses the MarkDown reference format, parseable
+        by Doxygen """
 
     ref_links[ref_name] = url
 
@@ -113,6 +124,7 @@ def _create_link(name, ref_name, url, ref_links):
 def create_header():
     "Returns header for top of page"
 
+    #pylint: disable=anomalous-backslash-in-string
     header = "/*! \page requirements Requirements\n\n"
 
     return header
@@ -130,36 +142,39 @@ def create_footer(ref_links):
     return footer
 
 def create_seperator():
+    """ Returns the seperator inserted betweeen each issue """
     return "\n"
 
 def write_file_to_disk(output_path, output_string):
     " write the formatted file to disk "
 
-    f = open(output_path,"w")
-    f.write(output_string)
-    f.close()
+    opened_file = open(output_path, "w")
+    opened_file.write(output_string)
+    opened_file.close()
 
 def parse_arguments():
     """ Parses the arguments given """
 
-    parser = argparse.ArgumentParser(description = __doc__)
+    parser = argparse.ArgumentParser(description=__doc__)
 
-    parser.add_argument('-u','--user', default='BenBoZ', type=str, 
-                        help='The user or organization of the repo') 
+    parser.add_argument('-u', '--user', default='BenBoZ', type=str,
+                        help='The user or organization of the repo')
 
-    parser.add_argument('-r','--repo', default='DoxyIssues', type=str, 
+    parser.add_argument('-r', '--repo', default='DoxyIssues', type=str,
                         help='The name of the repo')
 
-    parser.add_argument('-s','--state', default='all', type=str,
-                        choices=['open','closed','all'],
+    parser.add_argument('-s', '--state', default='all', type=str,
+                        choices=['open', 'closed', 'all'],
                         help='Define in which state the issues are in')
 
-    parser.add_argument('-o','--output_path', default='output.dox', type=str,
+    parser.add_argument('-o', '--output_path', default='output.dox', type=str,
                         help='The relative or absolute path where the file will be written')
 
     return parser.parse_args()
 
-if __name__ == "__main__":
+def get_issues_and_write_to_file():
+    """ This function performs all actions to get the issues from github and
+        write them to file """
 
     args = parse_arguments()
 
@@ -179,4 +194,8 @@ if __name__ == "__main__":
 
     print("Writing issues to {0.output_path}".format(args))
     write_file_to_disk(args.output_path, output_file)
+
+if __name__ == "__main__":
+
+    get_issues_and_write_to_file()
 
