@@ -4,9 +4,14 @@ from githubpy.github import *
 
 from textwrap import TextWrapper
 
-USER='RemediOSM'
-REPO='UltraSound'
+import argparse
 
+__doc__ = """\
+doxy_issues retrieves all github issues from the given repo and outputs them in 
+MarkDown format which is suitable for Doxygen.
+"""
+
+# constants
 OUTPUT_FILE = "output.txt"
 
 REQ_TEMPLATE = """\n\
@@ -18,7 +23,8 @@ REQ_TEMPLATE = """\n\
 EMPTY_ROW = """\
     | """
 
-def get_all_issues(user, repo):
+
+def get_all_issues(user, repo, state='all'):
     "Gets all issues from the specified users repo"
 
     gh = GitHub()
@@ -26,9 +32,9 @@ def get_all_issues(user, repo):
     page = 1
     issues = []
     while True:
-        print('page {}'.format(page))
-        result = gh.repos(USER)(REPO).issues.get(state='all')
+        result = gh.repos(user)(repo).issues.get(state=state, page=str(page))
         if len(result) > 0:
+            print('Retrieved page {}'.format(page))
             issues = issues + result
             page += 1
         else:
@@ -128,16 +134,40 @@ def create_footer(ref_links):
 def create_seperator():
     return "\n"
 
-def write_file_to_disk(output_string):
+def write_file_to_disk(output_path, output_string):
     " write the formatted file to disk "
 
-    f = open(OUTPUT_FILE,"w")
+    f = open(output_path,"w")
     f.write(output_string)
     f.close()
 
+def parse_arguments():
+    """ Parses the arguments given """
+
+    parser = argparse.ArgumentParser(description = __doc__)
+
+    parser.add_argument('-u','--user', default='BenBoZ', type=str, 
+                        help='The user or organization of the repo') 
+
+    parser.add_argument('-r','--repo', default='DoxyIssues', type=str, 
+                        help='The name of the repo')
+
+    parser.add_argument('-s','--state', default='all', type=str,
+                        choices=['open','closed','all'],
+                        help='Define in which state the issues are in')
+
+    parser.add_argument('-o','--output_path', default='output.dox', type=str,
+                        help='The relative or absolute path where the file will be written')
+
+    return parser.parse_args()
+
 if __name__ == "__main__":
 
-    issues = get_all_issues(USER, REPO)
+    args = parse_arguments()
+
+    print("Getting {0.state} issues from https://github/com/{0.user}/{0.repo}".format(args))
+
+    issues = get_all_issues(args.user, args.repo, args.state)
 
     output_file = create_header()
     ref_links = {}
@@ -149,5 +179,6 @@ if __name__ == "__main__":
 
     output_file += create_footer(ref_links)
 
-    write_file_to_disk(output_file)
+    print("Writing issues to {0.output_path}".format(args))
+    write_file_to_disk(args.output_path, output_file)
 
